@@ -8,8 +8,8 @@ Do not put credentials, private URLs, or local filesystem paths here.
 | Item | Value |
 | --- | --- |
 | Public repository URL | `https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment` |
-| Fixed commit SHA | `760303b9b6d2a8e944c6c0fc921ec0276f00accd` |
-| Fixed source tag | `submission-source-v8`（提出候補の識別tag） |
+| Fixed commit SHA | `1faef7c85667af0d9ad06c18ec8f5150dfa1201d` |
+| Fixed source tag | `submission-source-v9`（提出候補の識別tag） |
 | Demonstration video URL | `https://youtu.be/HnCxy8pZ3nA` |
 | Report | `REPORT.md` |
 | Machine-readable result | `results/grasp_lift_summary.json` |
