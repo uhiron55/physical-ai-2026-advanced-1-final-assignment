@@ -78,6 +78,14 @@ Offline評価は、学習に使った20 episodeから先頭frameを1件ずつ選
 学習済みmodelの入出力が成立することを調べるための確認であり、汎化性能は評価していません。
 Closed-loop評価も`home_safe`条件の1回だけであり、success rateを推定できる回数には達していません。
 
+### 二つの「三段階」を分けて読む
+
+本実験には、意味の異なる二つの三段階があります。
+一つ目は動作を時間方向に分けたphaseで、全工程`approach -> descend -> grasp -> lift -> transfer -> release -> return`のうち、局所再学習では`descend -> grasp -> lift`の3 phaseだけを切り出しました。
+二つ目は評価の強さで、教師システムの成功、Dataset上のoffline追従、Gazeboでのclosed-loop task完了を順に確認します。
+前者は「どの動作区間を学習したか」、後者は「どこまで性能を実証したか」を表す別の軸です。
+局所再学習で確認したZ座標の増加は、3 phaseの範囲に関するclosed-loop診断であり、`transfer -> release -> return`を含む全工程の成功には数えていません。
+
 ## 3. 各要素を組み合わせた理由
 
 | 要素 | 入力 | 出力・責務 | 採用理由 |
@@ -426,7 +434,7 @@ AI-Robot-Book-Humble由来codeについては、revision `19c1d6069126cd27488bf1
 本公開repositoryはCRANE+のCADやmesh、Docker image自体を再配布せず、実行時に外部環境から参照します。
 
 公開repositoryは[uhiron55/physical-ai-2026-advanced-1-final-assignment](https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment)です。
-提出対象の固定commitは`SUBMISSION.md`と`submission-source-v7` tagに示しています。
+提出対象の固定commitは`SUBMISSION.md`と`submission-source-v8` tagに示しています。
 提出動画は[YouTubeの限定公開URL](https://youtu.be/HnCxy8pZ3nA)で確認できます。
 固定digestの新規containerでは、2 packageのbuild、camera / controller readiness、決定論的fallbackによる教師episodeを再実行しています。
 配置誤差は2.81 mmでした。
