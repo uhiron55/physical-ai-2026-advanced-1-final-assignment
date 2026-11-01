@@ -494,7 +494,7 @@ AI-Robot-Book-Humble由来codeについては、revision `19c1d6069126cd27488bf1
 本公開repositoryはCRANE+のCADやmesh、Docker image自体を再配布せず、実行時に外部環境から参照します。
 
 公開repositoryは[uhiron55/physical-ai-2026-advanced-1-final-assignment](https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment)です。
-提出対象の固定commitは`SUBMISSION.md`と`submission-source-v12` tagに示しています。
+提出対象の固定commitは`SUBMISSION.md`と`submission-source-v13` tagに示しています。
 提出動画は[YouTubeの限定公開URL](https://youtu.be/HnCxy8pZ3nA)で確認できます。
 固定digestの新規containerでは、2 packageのbuild、camera / controller readiness、決定論的fallbackによる教師episodeを再実行しています。
 配置誤差は2.81 mmでした。
