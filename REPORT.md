@@ -180,6 +180,21 @@ parameterized_pick_place <-> jev_phase_selector <-> Jev API    |
 rosbag2 -> audit / 20 Hz同期 -> LeRobotDataset -> ACT学習 -> checkpoint
 ```
 
+実装で使った主要topicは次のとおりです。
+
+| 用途 | Topic | Publisher → Subscriber / 記録先 |
+| --- | --- | --- |
+| 観測 | `/camera/image_raw`、`/joint_states` | `ros_gz_bridge` / `joint_state_broadcaster` → `jev_phase_selector`、`act_rollout_controller`、rosbag2 |
+| Jev判断 | `/jev_crane/phase_request`、`/jev_crane/selected_phase`、`/jev_crane/decision` | pick-and-place node ↔ `jev_phase_selector`、rosbag2 |
+| episode文脈 | `/pick_place/task_context`、`/pick_place/phase` | pick-and-place node → rosbag2 |
+| 教師action | `/crane_plus_arm_controller/controller_state`、`/crane_plus_gripper_controller/controller_state` | controller → rosbag2。変換時は`reference`を教師actionとして使用 |
+| ACT実行 | `/crane_plus_arm_controller/joint_trajectory`、`/crane_plus_gripper_controller/joint_trajectory` | `act_rollout_controller` → controller |
+| ACT監査 | `/act_rollout/action`、`/act_rollout/status` | `act_rollout_controller` → 実行ログ / 監査 |
+
+MoveIt 2による計画・実行要求は、通常のsensor topicだけで完結する経路ではありません。
+`MoveGroupInterface`から`move_group`へaction requestを送り、計画済みtrajectoryをcontroller側のaction interfaceへ渡します。
+上表は、今回の実装で明示的にpublish / subscribeまたはrosbag2記録したtopicへ絞っています。
+
 したがって、関節ごとに独立したROS 2ノードを作ったわけではありません。
 複数関節の実行はcontroller群が担い、上位のノードは判断、phase進行、観測と推論の接続といった責務を持ちます。
 また、Jev API、ACT inference server、bag変換、ACT学習は、ROS 2 topic graphの外にある外部処理です。

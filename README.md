@@ -71,6 +71,13 @@ interfaces; dataset conversion and ACT training are offline processes, not ROS
 2 nodes. The teacher-collection runtime and learned-policy runtime are separate
 execution modes.
 
+Key topic groups are `/camera/image_raw` and `/joint_states` for observation;
+`/jev_crane/phase_request`, `/jev_crane/selected_phase`, and
+`/jev_crane/decision` for strategy selection; `/pick_place/task_context` and
+`/pick_place/phase` for episode context; and the arm / gripper controller-state
+and joint-trajectory topics for teacher recording and ACT execution. MoveIt 2
+planning and execution use ROS 2 action interfaces in addition to these topics.
+
 The repository contains the validated scripted baseline, a fixed-camera Gazebo world, the Jev phase selector, the MoveIt 2 phase executor, rosbag2 auditing, LeRobot conversion, and an ACT training command.
 
 The validated pilot follows this route:
