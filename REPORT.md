@@ -51,7 +51,9 @@ Jevがtransfer strategyを選び、MoveIt 2が各phaseの軌道を計画し、RO
 これは説明のための呼称であり、soft targetを使う一般的なknowledge distillationや、新しい蒸留アルゴリズムの提案ではありません。
 
 教師システムは、効率を優先して持ち上げ位置から直接運ぶ`direct_transfer`と、いったん既知のhome姿勢を経由する`home_transfer`を生成します。
-固定カメラからも条件が分かるように、前者には緑、後者には橙のroute cueを置きました。
+固定カメラからも経路条件が分かるように、作業台上の固定位置へ5 cm角、厚さ2.5 cmの箱形マーカーを置きました。
+緑のマーカーは`direct_clear -> direct_transfer`、橙のマーカーは`home_safe -> home_transfer`を表し、各episodeでは該当する片方だけをカメラ画像内に表示します。
+これは既知の経路条件を画像へ符号化するためのroute cueであり、実際の障害物ではありません。
 ACTにはこの画像と現在の5関節状態を渡し、次の絶対関節目標をまとめて予測させました。
 
 教師動作の生成から収録、同期、LeRobotDatasetへの変換、ACT学習、Gazeboでのclosed-loop実行までは接続できました。
@@ -90,6 +92,8 @@ Closed-loop評価も`home_safe`条件の1回だけであり、success rateを推
 2種類の条件を選ぶだけなら、if文でも実装できます。
 それでもJevを採用したのは、現在の分岐を解くためではなく、選択肢、判断根拠、confidence、fallbackを同じJSON schemaで記録し、経路候補や目的が増えたときに判断層を差し替えられるか試すためです。
 この実験で確認できたのは、観測可能な条件、構造化判断、異なる教師軌道を一つのデータ経路へ接続できることです。
+ここでいうroute cueは、作業台上の固定位置へ表示する5 cm角の箱形マーカーです。
+緑は`direct_clear -> direct_transfer`、橙は`home_safe -> home_transfer`に対応し、各episodeでは片方だけを表示します。
 障害物を画像で認識して経路を推論する能力は評価対象に含めていません。
 
 ### Jevへ渡した入力
@@ -347,7 +351,7 @@ AI-Robot-Book-Humble由来codeについては、revision `19c1d6069126cd27488bf1
 本公開repositoryはCRANE+のCADやmesh、Docker image自体を再配布せず、実行時に外部環境から参照します。
 
 公開repositoryは[uhiron55/physical-ai-2026-advanced-1-final-assignment](https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment)です。
-提出対象の固定commitは`SUBMISSION.md`と`submission-source-v3` tagに示しています。
+提出対象の固定commitは`SUBMISSION.md`と`submission-source-v5` tagに示しています。
 提出動画は[YouTubeの限定公開URL](https://youtu.be/HnCxy8pZ3nA)で確認できます。
 固定digestの新規containerでは、2 packageのbuild、camera / controller readiness、決定論的fallbackによる教師episodeを再実行しています。
 配置誤差は2.81 mmでした。
