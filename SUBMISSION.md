@@ -8,7 +8,8 @@ Do not put credentials, private URLs, or local filesystem paths here.
 | Item | Value |
 | --- | --- |
 | Public repository URL | `https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment` |
-| Fixed commit SHA | `1c6a64e319899976a336d046dfa7f05034a32077` |
+| Fixed commit SHA | `aa7e67d4bb0cecc59e9827674f4630fa4c277a1c` |
+| Fixed source tag | `submission-source-v4`（提出候補の識別tag） |
 | Demonstration video URL | `https://youtu.be/HnCxy8pZ3nA` |
 | Report | `REPORT.md` |
 | Machine-readable result | `results/grasp_lift_summary.json` |
@@ -44,7 +45,7 @@ Do not put credentials, private URLs, or local filesystem paths here.
 | Check | Result |
 | --- | --- |
 | Date | `2026-11-01` |
-| Source state | Public source fixed at commit `1c6a64e319899976a336d046dfa7f05034a32077` and tag `submission-source-v3` |
+| Source state | Historical clean-clone check: commit `1c6a64e319899976a336d046dfa7f05034a32077` and tag `submission-source-v3` |
 | Environment | Fresh source copy mounted in the pinned container digest |
 | Build | Passed in a fresh digest-pinned container; 2 packages built |
 | Scripted teacher smoke test | Passed with deterministic fallback; 2.81 mm placement error |
