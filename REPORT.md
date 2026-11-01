@@ -1,5 +1,8 @@
 # 専門機能をデータ生成器として使うCRANE+ Pick-and-Place
 
+本課題の発想は、Jev、MoveIt 2、ROS 2 controllerが組み立てた動作をデータとして記録し、一つの学習ポリシーへ移せるか、というものである。
+複数の専門機能から単一ポリシーへのこの移行を、本稿では便宜上「振る舞いの蒸留（behavioral distillation）」と呼ぶ。
+
 ## 1. なぜこの構成を試したか
 
 ### Day5の演習から始めた
@@ -43,8 +46,8 @@ Jevがtransfer strategyを選び、MoveIt 2が各phaseの軌道を計画し、RO
 第二に、そのデータ量と多様性で、学習ポリシーは教師システムの振る舞いをどこまで再現できるか。
 
 このレポートでは、Jev、MoveIt 2、ROS 2 controllerの組み合わせを**教師システム**、そこから収集したデモを学習するACTを**学習ポリシー**と呼ぶ。
-教師システムの軌道を模倣学習で学習ポリシーへ移す試みを、ここではbehavioral distillationと捉えている。
-soft targetを使う一般的なknowledge distillationとは異なる。
+教師システムの軌道をdemonstrationとして記録し、模倣学習でACTへ移す過程が、本稿でいう**振る舞いの蒸留（behavioral distillation）**である。
+これは説明のための呼称であり、soft targetを使う一般的なknowledge distillationや、新しい蒸留アルゴリズムの提案ではない。
 
 教師システムは、効率を優先して持ち上げ位置から直接運ぶ`direct_transfer`と、いったん既知のhome姿勢を経由する`home_transfer`を生成する。
 固定カメラからも条件が分かるように、前者には緑、後者には橙のroute cueを置いた。
