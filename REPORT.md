@@ -284,10 +284,10 @@ AI-Robot-Book-Humble由来codeは、revision `19c1d6069126cd27488bf1bbefd410704b
 
 公開repositoryは[uhiron55/physical-ai-2026-advanced-1-final-assignment](https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment)である。
 提出対象の固定commitは`SUBMISSION.md`と`submission-source-v3` tagで示す。
-YouTube URLは未確定である。
+提出動画は[YouTubeの限定公開URL](https://youtu.be/HnCxy8pZ3nA)で確認できる。
 固定digestの新規containerでは、2 packageのbuild、camera / controller readiness、決定論的fallbackによる教師episodeを再実行し、配置誤差2.81 mmで完了した。
 大容量dataset、checkpoint、評価bagはGitへ含めず、`results/artifact_manifest.json`に論理path、size、SHA-256を記録した。
-動画公開後に`SUBMISSION.md`へURLを追記し、`python3 scripts/validate_repository.py --release`を通す必要がある。
+公開repository、固定source commit、動画URLは`SUBMISSION.md`に集約し、`python3 scripts/validate_repository.py --release`で提出状態を検査する。
 
 ## 出典
 
