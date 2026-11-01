@@ -97,9 +97,22 @@ closed-loop評価も`home_safe`条件の1回だけであり、成功率を推定
 | LeRobotDataset | 監査済みbag | 20 Hzでそろった画像、state、action | ACTが読めるepisode形式と正規化統計を作るため |
 | ACT | RGB画像と現在の関節状態 | 100 stepの絶対関節目標chunk | 画像条件付きの連続actionをまとめて生成するため |
 
-2種類の条件を選ぶだけなら、if文でも実装できます。
-それでもJevを採用したのは、現在の分岐を解くためではなく、選択肢、判断根拠、confidence、fallbackを同じJSON schemaで記録し、経路候補や目的が増えたときに判断層を差し替えられるか試すためです。
-この実験で確認できたのは、観測可能な条件、構造化判断、異なる教師軌道を一つのデータ経路へ接続できることです。
+### Jevが必要だったか
+
+出発点にあった課題は、条件ごとに異なる成功デモを増やすと、**なぜその経路を選んだか**が軌道だけからは分からなくなることでした。
+条件判定、経路方針の選択、軌道生成を一つのif文へ重ねると、候補や最適化目標を追加するたびに実行コードを書き換える必要があり、判断根拠、confidence、fallbackも共通形式で残りません。
+
+そこで、次の境界を設けました。
+
+1. 作業条件、選択候補、最適化目標を判断層へ渡す。
+2. 判断層はstrategy、confidence、候補確率をJSON schemaで返す。
+3. MoveIt 2は選ばれたstrategyから関節軌道を生成し、ROS 2 controllerが実行する。
+4. rosbag2には、判断結果と、その結果に沿って生成された観測・関節運動を同じepisodeの証拠として残す。
+
+Jevは、この判断層を構造化入出力で実装するために採用しました。
+今回の二択だけならif文で十分であり、Jevの必要性そのものを実証したわけではありません。
+確認したのは、条件や候補が増えても実行層を変えずに判断層を差し替えられる構成と、判断理由を伴う教師デモ生成の経路です。
+
 ここでいうroute cueは、作業台上の固定位置へ表示する5 cm角の箱形マーカーです。
 緑は`direct_clear → direct_transfer`、橙は`home_safe → home_transfer`に対応し、各episodeでは片方だけを表示します。
 障害物を画像で認識して経路を推論する能力は評価対象に含めていません。
@@ -434,7 +447,7 @@ AI-Robot-Book-Humble由来codeについては、revision `19c1d6069126cd27488bf1
 本公開repositoryはCRANE+のCADやmesh、Docker image自体を再配布せず、実行時に外部環境から参照します。
 
 公開repositoryは[uhiron55/physical-ai-2026-advanced-1-final-assignment](https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment)です。
-提出対象の固定commitは`SUBMISSION.md`と`submission-source-v9` tagに示しています。
+提出対象の固定commitは`SUBMISSION.md`と`submission-source-v10` tagに示しています。
 提出動画は[YouTubeの限定公開URL](https://youtu.be/HnCxy8pZ3nA)で確認できます。
 固定digestの新規containerでは、2 packageのbuild、camera / controller readiness、決定論的fallbackによる教師episodeを再実行しています。
 配置誤差は2.81 mmでした。
