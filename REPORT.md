@@ -87,6 +87,54 @@ Closed-loop評価も`home_safe`条件の1回だけであり、success rateを推
 この実験では、観測可能な条件、構造化判断、異なる教師軌道を一つのデータ経路へ接続できることを確認した。
 障害物を画像で認識して経路を推論する能力は評価対象に含めていない。
 
+### Jevへ渡した入力
+
+実装では、ROS 2の`/jev_crane/phase_request`から受け取った候補と作業条件に、最新の`/camera/image_raw`をJPEG化して加え、`image_text`モードのJSON payloadを組み立てた。
+以下は`direct_clear`条件の代表例である。
+認証headerと`data_base64`の画像本体だけを省略しており、key名と指示文は`phase_selector.py`の実装に対応する。
+
+```json
+{
+  "model": "jev-latest",
+  "state": {
+    "task": "Choose a safe transfer strategy for a simulated CRANE+ pick-and-place episode after the cube has been grasped and lifted.",
+    "current_phase": "lifted",
+    "candidate_descriptions": {
+      "home_transfer": "Move to the known home pose before approaching the placement target. This is longer but provides a stable, repeatable transfer path.",
+      "direct_transfer": "Plan directly from the lifted grasp pose to the placement target. This is shorter but can be harder to plan near the table."
+    },
+    "task_context": {
+      "route_profile": "direct_clear",
+      "direct_path_clear": true,
+      "optimization_goal": "efficiency",
+      "route_cue": "green"
+    },
+    "camera_frame": "jev-camera-frame"
+  },
+  "questions": {
+    "next_strategy": {
+      "type": "choice",
+      "instructions": "Inspect `camera_frame` and the supplied task_context, then choose one candidate. The visible route cue and structured context encode the same condition and should agree.",
+      "criteria": {
+        "home_transfer": "Move to the known home pose before approaching the placement target.",
+        "direct_transfer": "Plan directly from the lifted grasp pose to the placement target."
+      }
+    }
+  },
+  "assets": {
+    "jev-camera-frame": {
+      "type": "image",
+      "format": "jpg",
+      "data_base64": "<JPEG bytes omitted>"
+    }
+  }
+}
+```
+
+Jevから受け取るのは`choice`、`confidence`、候補ごとの`probabilities`である。
+この出力を検証し、候補外、confidence 0.55未満、API errorの場合は`recommended`へfallbackした後、選ばれたstrategyをMoveIt 2へ渡した。
+したがって、Jevが生成するのは関節軌道ではなく、後段の軌道計画を切り替える構造化判断である。
+
 rosbag2とLeRobotDatasetも役割が異なる。
 前者はtopicごとの時刻と原メッセージを保持する証拠層、後者は20 Hzへ同期し、学習で反復読込できる形式へ整えた学習層である。
 
