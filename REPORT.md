@@ -116,8 +116,8 @@ Closed-loop評価も`home_safe`条件の1回だけであり、success rateを推
       "type": "choice",
       "instructions": "Inspect `camera_frame` and the supplied task_context, then choose one candidate. The visible route cue and structured context encode the same condition and should agree.",
       "criteria": {
-        "home_transfer": "Move to the known home pose before approaching the placement target.",
-        "direct_transfer": "Plan directly from the lifted grasp pose to the placement target."
+        "home_transfer": "Move to the known home pose before approaching the placement target. This is longer but provides a stable, repeatable transfer path.",
+        "direct_transfer": "Plan directly from the lifted grasp pose to the placement target. This is shorter but can be harder to plan near the table."
       }
     }
   },
