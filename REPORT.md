@@ -145,6 +145,63 @@ Jevから受け取るのは`choice`、`confidence`、候補ごとの`probabiliti
 Jevの出力は、後段の軌道計画を切り替える構造化判断です。
 関節軌道はMoveIt 2が生成します。
 
+### 実例: episode 410の判断から学習データまで
+
+`pick-place-var-410`では、キューブを`y = -0.098556 m`へ置き、緑のcueと`direct_clear`条件を設定しました。
+アームは`approach -> descend -> grasp -> lift`まで共通の教師動作を実行し、lift後の21.781秒時点でJevへ経路選択を問い合わせました。
+Jevの実応答は次のとおりです。
+
+```json
+{
+  "choice": "direct_transfer",
+  "confidence": 1.0,
+  "probabilities": {
+    "home_transfer": 0.0,
+    "direct_transfer": 1.0
+  },
+  "fallback_reason": null
+}
+```
+
+この応答を受けると、MoveIt 2はhome姿勢を経由せず、lift後の姿勢から配置位置へ直接向かう軌道を計画します。
+ROS 2 controllerが軌道を実行し、episodeは`release -> return_home -> completed`まで進みました。
+配置誤差は6.52 mmでした。
+
+![episode 410のframe 436。緑のroute cueと搬送中のCRANE+](docs/assets/episode-410-frame-0436.png)
+
+ここで、Jevのrequest、decision、phase名は判断の監査とepisodeの切り出しに使いますが、ACTの入力や教師actionには直接含めていません。
+ACTが学ぶのは、実行中に記録した固定カメラ画像、現在の5関節角、同時刻のcontroller referenceです。
+episode 410は20 Hzの713 frameへ変換されました。
+次は、そのうちJev判断直後に相当するframe 436の実データを小数第6位へ丸めた例です。
+
+```json
+{
+  "episode_index": 0,
+  "frame_index": 436,
+  "timestamp_s": 21.80,
+  "observation.images.front": "frame-000436.png",
+  "observation.state": [-0.397441, 0.780200, 0.000688, -1.189075, 0.108013],
+  "action": [-0.324822, 0.831131, 0.108242, -1.173129, 0.174441],
+  "task": "pick_wood_cube_and_place_right"
+}
+```
+
+`observation.state`はその時点の実際の関節角、`action`は教師システムがcontrollerへ与えた次の絶対関節目標です。
+ACT学習時には、この1 frameの観測に対して、現在位置から続く最大100 step、20 Hzで最大5秒分のaction列を教師chunkとして組み立てます。
+したがって、Jevの一回の判断をラベルとして覚えるのではなく、その判断によって作られた一連の画像付き関節運動を模倣します。
+
+| 記録 | rosbag2に保存 | ACTの学習feature |
+| --- | --- | --- |
+| Jev request / decision | 保存する | 含めない |
+| phase名 | 保存する | 含めない。監査と切り出しに使用 |
+| 固定RGB画像 | 保存する | `observation.images.front` |
+| 現在関節角 | 保存する | `observation.state` |
+| controller reference | 保存する | `action` |
+| task名 | dataset変換時に付与 | 条件文字列として保持 |
+
+2 strategy pilot全体では、episode 410の713 frameとepisode 411の785 frameを合わせた1,498 frameが学習データです。
+最終的な`baseline-20`では、同じ変換規則で20 episode、15,016 frameを使用しました。
+
 rosbag2とLeRobotDatasetも役割が異なります。
 前者はtopicごとの時刻と原メッセージを保持する証拠層、後者は20 Hzへ同期し、学習で反復読込できる形式へ整えた学習層です。
 
@@ -351,7 +408,7 @@ AI-Robot-Book-Humble由来codeについては、revision `19c1d6069126cd27488bf1
 本公開repositoryはCRANE+のCADやmesh、Docker image自体を再配布せず、実行時に外部環境から参照します。
 
 公開repositoryは[uhiron55/physical-ai-2026-advanced-1-final-assignment](https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment)です。
-提出対象の固定commitは`SUBMISSION.md`と`submission-source-v5` tagに示しています。
+提出対象の固定commitは`SUBMISSION.md`と`submission-source-v6` tagに示しています。
 提出動画は[YouTubeの限定公開URL](https://youtu.be/HnCxy8pZ3nA)で確認できます。
 固定digestの新規containerでは、2 packageのbuild、camera / controller readiness、決定論的fallbackによる教師episodeを再実行しています。
 配置誤差は2.81 mmでした。
