@@ -1,0 +1,64 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.11"
+      - name: Validate public repository contents
+        run: python scripts/validate_repository.py
+      - name: Test validator negative fixtures
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m unittest discover -s tests -v
+      - name: Check shell syntax
+        run: for script in scripts/*.sh; do bash -n "$script"; done
+
+  ros-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Build the digest-pinned ROS runtime target
+        run: |
+          docker build \
+            --target ros-runtime \
+            --tag pai-final-assignment:ros-ci \
+            .
+
+  full-ml-build:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Build and verify the complete uv-managed environment
+        run: |
+          docker build \
+            --target full \
+            --tag pai-final-assignment:full-ci \
+            .
+          docker run --rm pai-final-assignment:full-ci -lc '
+            uv pip sync --check \
+              --python /opt/venvs/lerobot-gpu-py312/bin/python \
+              --torch-backend cu128 \
+              /workspace/requirements-ml.lock.txt &&
+            python -c "import torch, lerobot, rosbags, pyarrow, cv2; print(torch.__version__, lerobot.__version__)"'

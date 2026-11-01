@@ -1,0 +1,83 @@
+{
+  "experiment": "phase-clipped local motion evaluation",
+  "task": "descend_grasp_and_lift_cube",
+  "provenance": {
+    "artifact_source_snapshot": "vault snapshot d84bdb02d178acaa024c573114159d5b1a65d419",
+    "container_digest": "sha256:b58ec74c019aacd9ce4818fa25fc5a9e0a1f22f8c9cd1f5260994bf15cd9eb63",
+    "artifact_manifest": "artifact_manifest.json"
+  },
+  "train_dataset": {
+    "episodes": 40,
+    "frames": 4467,
+    "fps": 20
+  },
+  "holdout_dataset": {
+    "episodes": 6,
+    "frames": 661,
+    "fps": 20,
+    "episode_ids": [700, 701, 702, 703, 710, 711],
+    "source_collections": [
+      "manifest-diversity-motion-pilot-700-703.json",
+      "manifest-image-text-motion-pilot-710-711.json"
+    ],
+    "cube_y_range_m": [-0.104209, -0.096274],
+    "velocity_scale_range": [0.734, 0.7963],
+    "excluded_from_all_training_manifests": true,
+    "out_of_distribution_claim": false
+  },
+  "training": {
+    "optimizer_steps": 2000,
+    "final_loss": 1.377,
+    "gradient_norm": 80.725,
+    "training_first_frame_mae": 0.0301475,
+    "holdout_first_frame_mae": 0.0258735,
+    "first_chunk_mae_episode_0": 0.0147774,
+    "temporal_ensemble_coeff": null
+  },
+  "evaluation": {
+    "selected_trials": 3,
+    "n_action_steps": 100,
+    "recorded_actions_per_trial": 100,
+    "rate_hz": 20.0,
+    "max_delta_rad": 0.3,
+    "policy_reinference_inside_chunk": false,
+    "low_level_joint_feedback_continues": true,
+    "start_state_preparation": "Move the arm to the clipped holdout episode's first joint state while the cube is hidden, then restore the route cue and cube position before running the 100-action ACT chunk.",
+    "local_observation_threshold": "final cube Z increase >= 15 mm",
+    "strict_grasp_success_criterion": false,
+    "population_success_rate_estimate": false
+  },
+  "selection_protocol": {
+    "type": "post_hoc_diagnostic_subset",
+    "description": "Three trials were selected from the six-episode holdout to inspect local behavior across both route labels and different cube y positions.",
+    "preregistered": false,
+    "population_inference_allowed": false
+  },
+  "threshold_rationale": "The 15 mm final-Z threshold was introduced for the phase-isolation diagnostic to distinguish a clear vertical displacement from small pose noise. It is not a contact, support, or strict grasp criterion.",
+  "trials": [
+    {
+      "episode_id": 700,
+      "episode_index": 0,
+      "route": "direct_clear",
+      "cube_y_m": -0.097362,
+      "cube_z_increase_mm": 20.0187
+    },
+    {
+      "episode_id": 703,
+      "episode_index": 3,
+      "route": "home_safe",
+      "cube_y_m": -0.104209,
+      "cube_z_increase_mm": 20.1589
+    },
+    {
+      "episode_id": 710,
+      "episode_index": 4,
+      "route": "direct_clear",
+      "cube_y_m": -0.104176,
+      "cube_z_increase_mm": 21.2408,
+      "post_run_hold_s": 2.0,
+      "post_run_z_drift_mm": 0.0036
+    }
+  ],
+  "boundary": "A local Z-increase was observed across three selected conditions. The trials were not repeated per condition and do not establish a grasp success rate, a population success rate, or full pick-and-place completion."
+}

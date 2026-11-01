@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-11-01",
+  "availability": "local_only",
+  "availability_note": "Large datasets, checkpoints, and rosbag2 files are excluded from Git. The entries below identify the exact local artifacts used for the portable result.",
+  "artifact_source_snapshot": "vault snapshot d84bdb02d178acaa024c573114159d5b1a65d419",
+  "environment": {
+    "container_digest": "sha256:b58ec74c019aacd9ce4818fa25fc5a9e0a1f22f8c9cd1f5260994bf15cd9eb63",
+    "lerobot": "0.6.1",
+    "torch": "2.11.0+cu128",
+    "python": "3.12.16"
+  },
+  "artifacts": [
+    {
+      "role": "training_source_manifest",
+      "logical_path": "/workspace/artifacts/experiments/quantity-versus-diversity/manifests/diverse-40.json",
+      "size_bytes": 41908,
+      "sha256": "3f322f1171fcee8bfe3bf6e581be9b69d4e6cbe882341c17a87bffe012c7f74e"
+    },
+    {
+      "role": "holdout_source_manifest",
+      "logical_path": "/workspace/artifacts/experiments/quantity-versus-diversity/manifests/holdout-6.json",
+      "size_bytes": 6828,
+      "sha256": "935f608f0b9390bcdf731dbb5ce41c4954d34fa69aa844b368c06237b0595949"
+    },
+    {
+      "role": "training_dataset",
+      "logical_path": "/workspace/artifacts/lerobot/crane_plus_diverse_40ep_grasp_lift",
+      "size_bytes": 150005565,
+      "metadata": {
+        "info_json_sha256": "da4f1fe592a2fef136bc3be972f5c4f2998ae60dfefbc1e4f4a92aea7b6b8c2c",
+        "stats_json_sha256": "0433a6f5895feba13cac8513f6176feb33b6ec18384cab70611f6c2afa65593e"
+      }
+    },
+    {
+      "role": "holdout_dataset",
+      "logical_path": "/workspace/artifacts/lerobot/crane_plus_holdout_6ep_grasp_lift",
+      "size_bytes": 22118154,
+      "metadata": {
+        "info_json_sha256": "ca15271fba0656881b17d2ff3c0050a7192c6c59dbe36fd3369735c461b75810",
+        "stats_json_sha256": "31f7c60567a177261a703746dbc9047bcab60253ef47442cceb5bd7993961eba"
+      }
+    },
+    {
+      "role": "act_checkpoint",
+      "logical_path": "/workspace/artifacts/training/act-diverse-40ep-grasp-lift-2000step/checkpoints/002000/pretrained_model",
+      "size_bytes": 206717974,
+      "metadata": {
+        "model_safetensors_sha256": "5875097687d4e008e161f994762ce342e99b6f0920cbe5d10d623edf502c58dc",
+        "config_json_sha256": "d31ffe3c9cd5e065bda0f2bd294314b3dea3295561ffba242c041aa3491dec60",
+        "train_config_json_sha256": "6950c3209a51ebf87e1d01f5f7f5a5c9eeeb86bb1a9159067ce8c743e8d937e4"
+      }
+    },
+    {
+      "role": "selected_evaluation_bag_episode_700",
+      "logical_path": "/workspace/artifacts/experiments/grasp-lift-subtask/rollouts/holdout-700-chunk100-delta030-exact/holdout-700-chunk100-delta030-exact_0.db3",
+      "size_bytes": 98893824,
+      "sha256": "dedebb9dc8482355b556cf713bc9caf0cec76808fada1e9e882f64b1fbb5f056",
+      "sidecars": {
+        "action_summary_json_sha256": "55fc6889fd744b86f65340155424271e4510709e09757eae4901bd2b0eefcfbe",
+        "metadata_yaml_sha256": "d3673a6c34c300c97cdd8d2de391a0789efed4404fece7cfcd99ecd81a0947d4"
+      }
+    },
+    {
+      "role": "selected_evaluation_bag_episode_703",
+      "logical_path": "/workspace/artifacts/experiments/grasp-lift-subtask/rollouts/holdout-703-chunk100-delta030-exact/holdout-703-chunk100-delta030-exact_0.db3",
+      "size_bytes": 93454336,
+      "sha256": "dc1f0197c0eeb7e6c04cfdddd9b5f26b328588614600297992473b4298c38997",
+      "sidecars": {
+        "action_summary_json_sha256": "25cb06453c6a5b355dc1f0a4e0cc8701b551717445ad6d1325c5dd388d0d75ee",
+        "metadata_yaml_sha256": "1670656ba23acee31041f98eac0b86ee97f1c027d033a93510f45aaa03188cad"
+      }
+    },
+    {
+      "role": "selected_evaluation_bag_episode_710",
+      "logical_path": "/workspace/artifacts/experiments/grasp-lift-subtask/rollouts/holdout-710-chunk100-delta030-rerun/holdout-710-chunk100-delta030-rerun_0.db3",
+      "size_bytes": 140316672,
+      "sha256": "0cd8b4afb4e290c66e006f10ef125ce867e1d99c2859e08794b73784c15c2a23",
+      "sidecars": {
+        "action_summary_json_sha256": "ecea9d9efc7b69929e0e8285d456129437397b8c1be1e2fa3806a3c7c4ab7662",
+        "bag_audit_json_sha256": "f915456ef683e24c4b5fd4e881a0b3d4f4f397eaf46970f5f2de4e971ea11685"
+      }
+    }
+  ]
+}
