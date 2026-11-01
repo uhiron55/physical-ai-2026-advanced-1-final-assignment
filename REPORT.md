@@ -145,6 +145,24 @@ Jevから受け取るのは`choice`、`confidence`、候補ごとの`probabiliti
 Jevの出力は、後段の軌道計画を切り替える構造化判断です。
 関節軌道はMoveIt 2が生成します。
 
+### Jevが選ぶ2つの戦略
+
+Jevへ問い合わせる時点では、キューブの把持と持ち上げまでは完了しています。
+`approach -> descend -> grasp -> lift`は両方の戦略に共通であり、Jevが選ぶのはlift後から配置位置までの搬送経路です。
+
+| 選択肢 | 選択後の動き | 判断条件 | この経路の性質 |
+| --- | --- | --- | --- |
+| `direct_transfer` | lift後の姿勢から配置位置へ直接向かう | `direct_path_clear = true`かつ`optimization_goal = efficiency`。画像では緑のcue | 短く効率的だが、テーブル付近では軌道計画が難しくなり得る |
+| `home_transfer` | いったん既知のhome姿勢へ戻り、そこから配置位置へ向かう | `direct_path_clear = false`または`optimization_goal = stability`。画像では橙のcue | 経路は長いが、既知姿勢を経由するため安定して再現しやすい |
+
+Jevは候補から経路方針を一つ選び、`choice`、`confidence`、候補確率を返します。
+選択結果を受けたMoveIt 2が、現在の姿勢から必要な中間姿勢と配置姿勢までの関節軌道を計画します。
+ROS 2 controllerはその軌道を実行するため、Jev自身が関節角やモータ指令を生成しているわけではありません。
+
+今回の緑と橙のcueは、あらかじめ設定した経路条件を画像から読み取れるようにする制御ラベルです。
+障害物を検出して未知の経路を発見する実験ではありません。
+一方、この判断境界は候補を増やせるため、将来は障害物の左右を通る経路、上方へ退避する経路、速度優先と安定性優先などを同じschemaで比較できます。
+
 ### 実例: episode 410の判断から学習データまで
 
 `pick-place-var-410`では、キューブを`y = -0.098556 m`へ置き、緑のcueと`direct_clear`条件を設定しました。
@@ -408,7 +426,7 @@ AI-Robot-Book-Humble由来codeについては、revision `19c1d6069126cd27488bf1
 本公開repositoryはCRANE+のCADやmesh、Docker image自体を再配布せず、実行時に外部環境から参照します。
 
 公開repositoryは[uhiron55/physical-ai-2026-advanced-1-final-assignment](https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment)です。
-提出対象の固定commitは`SUBMISSION.md`と`submission-source-v6` tagに示しています。
+提出対象の固定commitは`SUBMISSION.md`と`submission-source-v7` tagに示しています。
 提出動画は[YouTubeの限定公開URL](https://youtu.be/HnCxy8pZ3nA)で確認できます。
 固定digestの新規containerでは、2 packageのbuild、camera / controller readiness、決定論的fallbackによる教師episodeを再実行しています。
 配置誤差は2.81 mmでした。
