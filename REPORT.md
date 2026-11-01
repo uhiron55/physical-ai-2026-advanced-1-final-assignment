@@ -485,6 +485,12 @@ ACTがpick-and-place全体を学習したとは言えません。
 closed-loopは複数の初期配置と両route条件で少なくとも5回ずつ実行し、成功率とTask Completionを記録します。
 同時にraw action、clamp後action、joint errorを保存し、最初の破綻点を特定します。
 
+さらに、Jevの判断を搬送経路だけでなく、初動の位置合わせへ広げます。
+箱を作業台上の複数位置へ配置し、固定カメラ画像と到達条件から、左・正面・右のどこから接近するか、home姿勢を経由するか、到達困難として停止するかをJevに選ばせます。
+選ばれた方針をMoveIt 2が関節軌道へ変換し、ROS 2 controllerで実行した画像と関節運動を新しい教師episodeとして収録します。
+この構成では、Jevが数秒単位の接近方針、MoveIt 2が幾何的な軌道、ACTが画像条件付きの連続関節動作、低位controllerが追従制御を担当します。
+箱の位置を連続的に変えた学習用episodeと、学習に含めない配置を分離し、ACTが収集範囲内の別配置へ追従できるかを評価します。
+
 ## 9. 再現性と提出物
 
 公開用sourceの範囲は、ROS 2 package、収集、bag監査、LeRobot変換、ACT学習、オフライン評価、推論server、rollout controller、提出動画生成です。
