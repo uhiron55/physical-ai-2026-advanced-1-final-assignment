@@ -137,6 +137,17 @@ class RepositoryValidatorTests(unittest.TestCase):
             generated.write_bytes(b"generated")
             self.assertEqual([], VALIDATOR.validate(root))
 
+    def test_git_metadata_is_ignored(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            make_minimum_tree(root)
+            metadata = root / ".git" / "objects" / "secret-like-file.txt"
+            metadata.parent.mkdir(parents=True)
+            label = "access_" + "token"
+            metadata.write_text(f"{label}=git-internal-fixture\n", encoding="utf-8")
+            self.assertNotIn(metadata, VALIDATOR.iter_files(root))
+            self.assertEqual([], VALIDATOR.validate(root))
+
     def test_invalid_artifact_hash_and_size_are_rejected(self) -> None:
         manifest = json.dumps(
             {

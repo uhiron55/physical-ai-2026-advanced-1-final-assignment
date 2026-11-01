@@ -107,7 +107,9 @@ def iter_files(root: Path = ROOT) -> list[Path]:
     return [
         path
         for path in root.rglob("*")
-        if path.is_file() and not is_generated_root(path, root)
+        if path.is_file()
+        and ".git" not in path.relative_to(root).parts
+        and not is_generated_root(path, root)
     ]
 
 
