@@ -201,7 +201,7 @@ def main() -> int:
 
     document = {
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "model": os.getenv("TYPESAFE_DEFAULT_MODEL", "jev-latest"),
+        "model": os.getenv("TYPESAFE_DEFAULT_MODEL", "jev-1.14.0"),
         "result_count": len(results),
         "model_correct_count": sum(item["model_correct"] for item in results),
         "executed_correct_count": sum(

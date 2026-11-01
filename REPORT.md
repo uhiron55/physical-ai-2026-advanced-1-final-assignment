@@ -227,7 +227,7 @@ Jevは、この判断層を構造化入出力で実装するために採用し�
 
 ```json
 {
-  "model": "jev-latest",
+  "model": "jev-1.14.0",
   "state": {
     "task": "Choose a safe transfer strategy for a simulated CRANE+ pick-and-place episode after the cube has been grasped and lifted.",
     "current_phase": "lifted",
@@ -360,13 +360,14 @@ rosbag2とLeRobotDatasetも役割が異なります。
 | ROS / motion planning | ROS 2 Humble base package `0.10.0-1jammy.20250114.175320`、MoveIt 2 package `2.5.7-1jammy.20250114.205048` |
 | Simulation bridge | `ros_gz_sim 0.244.16-2jammy.20241205.203411`。Gazebo / Ignitionを含むruntime全体は上記image digestで固定 |
 | Robot model / source | CRANE+ V2、`AI-Robot-Book-Humble/crane_plus` revision `19c1d6069126cd27488bf1bbefd410704bfc515d` |
-| Jev service / model | TypeSafe AI Jev API、model identifier `jev-latest`、利用日2026-10-31。immutable model revisionは取得していない |
+| Jev service / model | TypeSafe AI Jev API、model identifier `jev-1.14.0`、利用日2026-10-31。bag内のAPI応答でも同じmodel IDを確認 |
 | Quest input pilot | Meta Quest 2、Quest2ROS ROS 2 branch commit `6e9e8afec0e00da4da9e6650cfe69e21bb500aad`。接続検証のみで最終構成には不使用 |
 | Learning stack | LeRobot 0.6.1、PyTorch 2.11.0+cu128、torchvision 0.26.0+cu128、NumPy 2.2.6 |
 | ACT model | LeRobot 0.6.1のACT実装、ImageNet事前学習済みResNet18、checkpoint `model.safetensors` SHA-256 `5875097687d4e008e161f994762ce342e99b6f0920cbe5d10d623edf502c58dc` |
 
 固定versionを取得できたものはversion、commit、digest、artifact hashで示しました。
-`jev-latest`はmutableなmodel identifierであり、2026-10-31に利用したモデルを同一revisionとして再取得できることまでは保証できません。
+実験時の`jev-latest`はAPI応答で`jev-1.14.0`へ解決されていました。
+再現用sourceでは`jev-1.14.0`を明示し、応答のmodel IDが一致しない場合は収集を停止します。
 
 ### 観測と行動
 

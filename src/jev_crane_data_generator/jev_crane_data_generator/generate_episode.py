@@ -69,7 +69,7 @@ class JevCraneEpisode(Node):
         self.use_jev = bool(self.get_parameter("use_jev").value)
 
         self.api_key = os.getenv("TYPESAFE_API_KEY", "")
-        self.model = os.getenv("TYPESAFE_DEFAULT_MODEL", "jev-latest")
+        self.model = os.getenv("TYPESAFE_DEFAULT_MODEL", "jev-1.14.0")
         if self.use_jev and not self.api_key:
             raise RuntimeError("TYPESAFE_API_KEY is required when use_jev=true")
 
@@ -297,9 +297,14 @@ class JevCraneEpisode(Node):
                 body = json.load(response)
         except urllib.error.HTTPError as exc:
             raise RuntimeError(f"Jev HTTP {exc.code}") from exc
+        resolved_model = body.get("model")
+        if resolved_model != self.model:
+            raise RuntimeError(
+                f"Jev model mismatch: requested {self.model}, resolved {resolved_model}"
+            )
         answer = body["answers"]["next_action"]
         return {
-            "model": body.get("model"),
+            "model": resolved_model,
             "choice": answer.get("choice"),
             "confidence": answer.get("confidence", 0.0),
             "probabilities": answer.get("probabilities", {}),

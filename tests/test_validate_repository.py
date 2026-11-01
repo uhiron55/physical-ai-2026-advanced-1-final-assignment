@@ -60,7 +60,11 @@ def make_minimum_tree(root: Path) -> None:
         elif relative == "LICENSE":
             path.write_text("Apache License\nVersion 2.0, January 2004\n", encoding="utf-8")
         elif relative == ".env.example":
-            path.write_text("TYPESAFE_API_KEY=\n", encoding="utf-8")
+            path.write_text(
+                "TYPESAFE_API_KEY=\n"
+                f"TYPESAFE_DEFAULT_MODEL={VALIDATOR.PINNED_JEV_MODEL}\n",
+                encoding="utf-8",
+            )
         elif relative == ".dockerignore":
             path.write_text(
                 ".env\nartifacts/\ndatasets/\n*.key\n*.p12\n*.pfx\n*.pt\n*.safetensors\n",
@@ -113,6 +117,14 @@ class RepositoryValidatorTests(unittest.TestCase):
         key_name = "TYPESAFE_" + "API_KEY"
         findings = self.run_fixture(".env", f"{key_name}=not-a-real-value\n")
         self.assertTrue(any("environment file" in finding for finding in findings))
+
+    def test_mutable_jev_alias_is_rejected(self) -> None:
+        key_name = "TYPESAFE_" + "API_KEY"
+        findings = self.run_fixture(
+            ".env.example",
+            f"{key_name}=\nTYPESAFE_DEFAULT_MODEL=jev-latest\n",
+        )
+        self.assertTrue(any("pin the tested Jev model" in finding for finding in findings))
 
     def test_private_key_is_rejected(self) -> None:
         marker = "-----BEGIN " + "PRIVATE KEY-----\nnot-a-key\n"

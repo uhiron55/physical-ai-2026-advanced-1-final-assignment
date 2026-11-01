@@ -126,6 +126,11 @@ MoveIt 2 or ACT interfaces:
 - `image`: infer the route profile from the latest camera frame.
 - `image_text`: evaluate the camera frame and structured context together.
 
+The repository pins `TYPESAFE_DEFAULT_MODEL=jev-1.14.0` rather than the
+mutable `jev-latest` alias. Every API response is checked against the requested
+model ID, so a silent server-side remap stops collection instead of mixing
+model revisions in one dataset.
+
 Image modes preserve the 320 x 240 camera geometry and pad the frame to
 320 x 320 before JPEG encoding, satisfying Jev's minimum image dimensions.
 They also enable the required `TypeSafe-Danger-Zone-Images` request header.
@@ -381,6 +386,7 @@ The rendered video labels accelerated segments, marks the first two sections as 
 ## Security and generated data
 
 Copy `.env.example` to an environment file outside the repository and provide `TYPESAFE_API_KEY` at runtime.
+Keep `TYPESAFE_DEFAULT_MODEL=jev-1.14.0` unless a new model is evaluated as a separate dataset version.
 Do not commit credentials, rosbag2 files, datasets, checkpoints, videos, or local absolute paths.
 
 ## Provenance

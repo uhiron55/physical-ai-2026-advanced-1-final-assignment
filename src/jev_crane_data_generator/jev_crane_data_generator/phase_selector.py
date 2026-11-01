@@ -58,7 +58,7 @@ class JevPhaseSelector(Node):
                 f"{self.input_mode}"
             )
         self.api_key = os.getenv("TYPESAFE_API_KEY", "")
-        self.model = os.getenv("TYPESAFE_DEFAULT_MODEL", "jev-latest")
+        self.model = os.getenv("TYPESAFE_DEFAULT_MODEL", "jev-1.14.0")
         self.latest_image_jpeg: bytes | None = None
         self.latest_image_shape: tuple[int, int] | None = None
 
@@ -282,6 +282,11 @@ class JevPhaseSelector(Node):
                 body = json.load(response)
         except urllib.error.HTTPError as exc:
             raise RuntimeError(f"Jev HTTP {exc.code}") from exc
+        resolved_model = body.get("model")
+        if resolved_model != self.model:
+            raise RuntimeError(
+                f"Jev model mismatch: requested {self.model}, resolved {resolved_model}"
+            )
         answer = body["answers"]["next_strategy"]
         return {
             "choice": answer.get("choice"),

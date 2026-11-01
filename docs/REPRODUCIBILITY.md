@@ -149,6 +149,8 @@ Such a run is an integration test and must not be reported as authenticated Jev 
 ### Level 3: authenticated Jev collection
 
 Inject `TYPESAFE_API_KEY` at runtime and collect a small pilot before scaling the dataset.
+The tested model is pinned as `TYPESAFE_DEFAULT_MODEL=jev-1.14.0`.
+The client rejects a response whose resolved model differs from the requested ID, preventing a mutable alias from silently changing the dataset generator.
 Keep both the model's raw choice and the fallback-adjusted executed strategy in the result.
 
 ### Level 4: ACT training and closed-loop evaluation

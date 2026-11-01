@@ -93,6 +93,7 @@ PINNED_BASE_PATTERN = re.compile(
     r"^FROM\s+airobotbook/ros2-desktop-ai-robot-book-humble@sha256:[0-9a-f]{64}\s+AS\s+ros-runtime$",
     re.M,
 )
+PINNED_JEV_MODEL = "jev-1.14.0"
 
 
 def is_generated_root(path: Path, root: Path) -> bool:
@@ -198,6 +199,14 @@ def check_markdown_links(root: Path, files: list[Path], findings: list[str]) -> 
 
 
 def check_structured_files(root: Path, findings: list[str]) -> None:
+    try:
+        env_example = (root / ".env.example").read_text(encoding="utf-8")
+        expected = f"TYPESAFE_DEFAULT_MODEL={PINNED_JEV_MODEL}"
+        if expected not in env_example.splitlines():
+            findings.append(f".env.example does not pin the tested Jev model: {expected}")
+    except OSError as error:
+        findings.append(f".env.example cannot be read: {error}")
+
     try:
         dockerfile = (root / "Dockerfile").read_text(encoding="utf-8")
         if not PINNED_BASE_PATTERN.search(dockerfile):
