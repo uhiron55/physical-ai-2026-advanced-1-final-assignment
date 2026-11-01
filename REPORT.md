@@ -1,38 +1,38 @@
 # 専門機能をデータ生成器として使うCRANE+ Pick-and-Place
 
-本課題の発想は、Jev、MoveIt 2、ROS 2 controllerが組み立てた動作をデータとして記録し、一つの学習ポリシーへ移せるか、というものである。
-複数の専門機能から単一ポリシーへのこの移行を、本稿では便宜上「振る舞いの蒸留（behavioral distillation）」と呼ぶ。
+本課題の発想は、Jev、MoveIt 2、ROS 2 controllerが組み立てた動作をデータとして記録し、一つの学習ポリシーへ移せるか、というものです。
+複数の専門機能から単一ポリシーへのこの移行を、本稿では便宜上「振る舞いの蒸留（behavioral distillation）」と呼びます。
 
 ## 1. なぜこの構成を試したか
 
 ### Day5の演習から始めた
 
-最終課題では、AIをロボットの行動へ接続し、実装、動画、source code、レポートで示す必要があった。
-そこで最初から新しい構成を作るのではなく、応用編1 Day5で扱った一連の流れを出発点にした。
-Day5では、ROS 2とGazebo上のCRANE+ V2をテレオペし、rosbag2へ記録し、LeRobotDatasetへ変換してACTを学習し、シミュレータへ戻すところまでを扱っている。
-この下流pipelineは、今回の課題でも再利用できると考えた。
+最終課題では、AIをロボットの行動へ接続し、実装、動画、source code、レポートで示す必要がありました。
+出発点には、応用編1 Day5で扱った一連の流れを選びました。
+Day5では、ROS 2とGazebo上のCRANE+ V2をテレオペし、rosbag2へ記録し、LeRobotDatasetへ変換してACTを学習し、シミュレータへ戻すところまでを扱っています。
+この下流pipelineを、今回の課題でも再利用する方針です。
 
 ### 入力手段を変える案を試した
 
-はじめに、ゲームコントローラでTurtleBot3を操作し、移動デモを集める案を比較した。
-再現しやすい構成ではあるが、講義を通じて関心を持ったマニピュレーションとaction chunkを扱うには、CRANE+ V2を使う方が課題の狙いに合っていた。
-この案は比較候補にとどめ、最終構成としては実装していない。
+はじめに、ゲームコントローラでTurtleBot3を操作し、移動デモを集める案を比較対象としました。
+再現しやすい構成ですが、講義を通じて関心を持ったマニピュレーションとaction chunkを扱うには、CRANE+ V2の方が課題の狙いに合います。
+この案は比較候補にとどめ、最終構成としては実装していません。
 
-次に、手元のMeta Quest 2をCRANE+ V2のテレオペ入力として使う経路を検証した。
-Quest2ROSのmessageとTCP endpointをbuildし、Quest 2からPCへ接続してcontroller入力が届くところまでは確認できた。
-一方、controllerの6DoF poseをアームの手先目標へ変換する経路と、robotのcamera imageやstateをVR内で確認しながら操作するloopは完成しなかった。
-この状態では、操作者が結果を見ながら修正できず、画像付きの成功デモを同じ品質で反復収集することが難しかった。
+次に、手元のMeta Quest 2をCRANE+ V2のテレオペ入力として使う経路を検証しました。
+Quest2ROSのmessageとTCP endpointをbuildし、Quest 2からPCへ接続してcontroller入力が届くところまでは確認できています。
+一方、controllerの6DoF poseをアームの手先目標へ変換する経路と、robotのcamera imageやstateをVR内で確認しながら操作するloopは完成しませんでした。
+この状態では、操作者が結果を見ながら修正できず、画像付きの成功デモを同じ品質で反復収集することは困難です。
 
 ### ボトルネックを、操作からデータ生成へ置き直した
 
-この試行から、今回のボトルネックはACTの学習codeよりも、成功した画像付きデモを安定して増やす部分にあると考えた。
-そこでDay5の`rosbag2 -> LeRobotDataset -> ACT -> Gazebo`は残し、デモを作る主体だけを人間から**教師システム**へ置き換えた。
-Jevがtransfer strategyを選び、MoveIt 2が各phaseの軌道を計画し、ROS 2 controllerがGazebo上で実行する。
-この成功動作を画像、関節状態、action、判断記録とともに保存すれば、同じ収集条件でepisodeを増やし、失敗したbagも規則に従って除外できる。
+この試行から見えたボトルネックは、ACTの学習codeよりも、成功した画像付きデモを安定して増やす部分です。
+そこでDay5の`rosbag2 -> LeRobotDataset -> ACT -> Gazebo`は残し、デモを作る主体だけを人間から**教師システム**へ置き換えました。
+Jevがtransfer strategyを選び、MoveIt 2が各phaseの軌道を計画し、ROS 2 controllerがGazebo上で実行します。
+この成功動作を画像、関節状態、action、判断記録とともに保存すれば、同じ収集条件でepisodeを増やし、失敗したbagも規則に従って除外できます。
 
-この設計変更は、Physical AIで繰り返し現れるデータ不足を、モデル側だけでなく生成側から扱う試みでもある。
-実機テレオペは価値が高い一方、robot、operator、収録時間を増やさなければepisode数を増やせず、失敗や同期ずれの検査にも手間がかかる。
-既に役割が分かった専門機能をデータ生成器として使い、条件付き成功デモを反復生成できれば、実機データを補う一つの経路になる。
+この設計変更は、Physical AIで繰り返し現れるデータ不足を、モデル側だけでなく生成側から扱う試みでもあります。
+実機テレオペは価値が高い一方、robot、operator、収録時間を増やさなければepisode数を増やせず、失敗や同期ずれの検査にも手間がかかります。
+既に役割が分かった専門機能をデータ生成器として使い、条件付き成功デモを反復生成できれば、実機データを補う一つの経路になります。
 
 | 段階 | 候補 | 確認したこと | 判断 |
 | --- | --- | --- | --- |
@@ -41,27 +41,28 @@ Jevがtransfer strategyを選び、MoveIt 2が各phaseの軌道を計画し、RO
 | 接続検証 | Quest 2 + CRANE+ | 通信、ROS 2 message、controller入力 | 知覚と操作のloopが未完成 |
 | 採用構成 | Jev + MoveIt 2 + controller | 条件付き成功デモの反復生成 | 教師システムとして採用 |
 
-研究上の問いは二つある。
-第一に、判断、軌道計画、制御を組み合わせれば、条件を変えた成功デモを反復生成し、学習可能なmultimodal datasetへ変換できるか。
-第二に、そのデータ量と多様性で、学習ポリシーは教師システムの振る舞いをどこまで再現できるか。
+研究上の問いは二つあります。
+第一に、判断、軌道計画、制御を組み合わせれば、条件を変えた成功デモを反復生成し、学習可能なmultimodal datasetへ変換できるでしょうか。
+第二に、そのデータ量と多様性で、学習ポリシーは教師システムの振る舞いをどこまで再現できるでしょうか。
 
-このレポートでは、Jev、MoveIt 2、ROS 2 controllerの組み合わせを**教師システム**、そこから収集したデモを学習するACTを**学習ポリシー**と呼ぶ。
-教師システムの軌道をdemonstrationとして記録し、模倣学習でACTへ移す過程が、本稿でいう**振る舞いの蒸留（behavioral distillation）**である。
-これは説明のための呼称であり、soft targetを使う一般的なknowledge distillationや、新しい蒸留アルゴリズムの提案ではない。
+このレポートでは、Jev、MoveIt 2、ROS 2 controllerの組み合わせを**教師システム**、そこから収集したデモを学習するACTを**学習ポリシー**と呼びます。
+教師システムの軌道をdemonstrationとして記録し、模倣学習でACTへ移す過程が、本稿でいう**振る舞いの蒸留（behavioral distillation）**です。
+これは説明のための呼称であり、soft targetを使う一般的なknowledge distillationや、新しい蒸留アルゴリズムの提案ではありません。
 
-教師システムは、効率を優先して持ち上げ位置から直接運ぶ`direct_transfer`と、いったん既知のhome姿勢を経由する`home_transfer`を生成する。
-固定カメラからも条件が分かるように、前者には緑、後者には橙のroute cueを置いた。
-ACTにはこの画像と現在の5関節状態を渡し、次の絶対関節目標をまとめて予測させた。
+教師システムは、効率を優先して持ち上げ位置から直接運ぶ`direct_transfer`と、いったん既知のhome姿勢を経由する`home_transfer`を生成します。
+固定カメラからも条件が分かるように、前者には緑、後者には橙のroute cueを置きました。
+ACTにはこの画像と現在の5関節状態を渡し、次の絶対関節目標をまとめて予測させました。
 
-今回成立したのは、教師動作の生成、収録、同期、LeRobotDatasetへの変換、ACT学習、Gazeboでのclosed-loop実行までである。
-全工程の学習ポリシーは45秒間動作したが、キューブを把持できなかった。
-その後、最初の失敗区間を`descend -> grasp -> lift`へ限定すると、学習対象外から選んだ3条件で終了時のキューブZ座標が20.02〜21.24 mm増えた。
-したがって、成果は「自動データ生成パイプラインの小規模なproof of conceptと、全工程では未達だったポリシーをphase単位へ分解して成立範囲を測った結果」であり、pick-and-place全体の再現成功ではない。
+今回成立したのは、教師動作の生成、収録、同期、LeRobotDatasetへの変換、ACT学習、Gazeboでのclosed-loop実行までです。
+全工程の学習ポリシーは45秒間動作しましたが、キューブを把持できませんでした。
+その後、最初の失敗区間を`descend -> grasp -> lift`へ限定すると、学習対象外から選んだ3条件で終了時のキューブZ座標が20.02〜21.24 mm増えました。
+したがって、今回の成果は「自動データ生成パイプラインの小規模なproof of conceptと、全工程では未達だったポリシーをphase単位へ分解して成立範囲を測った結果」です。
+pick-and-place全体の再現に成功したものではありません。
 
 ## 2. 何をもって成功としたか
 
-対象タスクは、初期位置`(x=0.000, y≈-0.100)`にある木製キューブを把持し、右側の指定位置へ運び、解放するpick-and-placeである。
-評価は一つの数字にまとめず、次の三段階に分けた。
+対象タスクは、初期位置`(x=0.000, y≈-0.100)`にある木製キューブを把持し、右側の指定位置へ運び、解放するpick-and-placeです。
+評価は一つの数字にまとめず、次の三段階に分けました。
 
 | 評価段階 | 確認したこと | 判定 |
 | --- | --- | --- |
@@ -69,9 +70,9 @@ ACTにはこの画像と現在の5関節状態を渡し、次の絶対関節目�
 | Offline推論 | checkpointを再読込し、各episode先頭frameから有限な5次元actionを出せるか | 20 / 20で有限値、平均MAE 0.0461 |
 | Closed-loop | ACTのactionだけでGazebo上のキューブを把持・搬送・配置できるか | 1 rolloutを実施、未達 |
 
-Offline評価は、学習に使った20 episodeから先頭frameを1件ずつ選んだsanity checkである。
-学習済みmodelの入出力が成立することを調べるための確認であり、汎化性能は評価していない。
-Closed-loop評価も`home_safe`条件の1回だけであり、success rateを推定できる回数には達していない。
+Offline評価は、学習に使った20 episodeから先頭frameを1件ずつ選んだsanity checkです。
+学習済みmodelの入出力が成立することを調べるための確認であり、汎化性能は評価していません。
+Closed-loop評価も`home_safe`条件の1回だけであり、success rateを推定できる回数には達していません。
 
 ## 3. 各要素を組み合わせた理由
 
@@ -84,17 +85,17 @@ Closed-loop評価も`home_safe`条件の1回だけであり、success rateを推
 | LeRobotDataset | 監査済みbag | 20 Hzでそろった画像、state、action | ACTが読めるepisode形式と正規化統計を作るため |
 | ACT | RGB画像と現在の関節状態 | 100 stepの絶対関節目標chunk | 画像条件付きの連続actionをまとめて生成するため |
 
-2種類の条件だけなら、Jevの選択はif文でも実装できる。
-今回のJevは、性能上不可欠な部品ではない。
-選択肢、判断根拠、confidence、fallbackを同じJSON schemaで記録し、経路候補や目的が増えた場合に判断層を差し替えられる構成を試すために置いた。
-この実験では、観測可能な条件、構造化判断、異なる教師軌道を一つのデータ経路へ接続できることを確認した。
-障害物を画像で認識して経路を推論する能力は評価対象に含めていない。
+2種類の条件だけなら、Jevの選択はif文でも実装可能です。
+今回のJevは、性能上必須の部品ではありません。
+選択肢、判断根拠、confidence、fallbackを同じJSON schemaで記録し、経路候補や目的が増えた場合に判断層を差し替えられる構成を試すために置きました。
+この実験で確認できたのは、観測可能な条件、構造化判断、異なる教師軌道を一つのデータ経路へ接続できることです。
+障害物を画像で認識して経路を推論する能力は評価対象に含めていません。
 
 ### Jevへ渡した入力
 
-実装では、ROS 2の`/jev_crane/phase_request`から受け取った候補と作業条件に、最新の`/camera/image_raw`をJPEG化して加え、`image_text`モードのJSON payloadを組み立てた。
-以下は`direct_clear`条件の代表例である。
-認証headerと`data_base64`の画像本体だけを省略しており、key名と指示文は`phase_selector.py`の実装に対応する。
+実装では、ROS 2の`/jev_crane/phase_request`から受け取った候補と作業条件に、最新の`/camera/image_raw`をJPEG化して加え、`image_text`モードのJSON payloadを組み立てました。
+以下は`direct_clear`条件の代表例です。
+認証headerと`data_base64`の画像本体だけを省略しており、key名と指示文は`phase_selector.py`の実装に対応しています。
 
 ```json
 {
@@ -134,12 +135,13 @@ Closed-loop評価も`home_safe`条件の1回だけであり、success rateを推
 }
 ```
 
-Jevから受け取るのは`choice`、`confidence`、候補ごとの`probabilities`である。
-この出力を検証し、候補外、confidence 0.55未満、API errorの場合は`recommended`へfallbackした後、選ばれたstrategyをMoveIt 2へ渡した。
-したがって、Jevが生成するのは関節軌道ではなく、後段の軌道計画を切り替える構造化判断である。
+Jevから受け取るのは`choice`、`confidence`、候補ごとの`probabilities`です。
+この出力を検証し、候補外、confidence 0.55未満、API errorの場合は`recommended`へfallbackした後、選ばれたstrategyをMoveIt 2へ渡しました。
+Jevの出力は、後段の軌道計画を切り替える構造化判断です。
+関節軌道はMoveIt 2が生成します。
 
-rosbag2とLeRobotDatasetも役割が異なる。
-前者はtopicごとの時刻と原メッセージを保持する証拠層、後者は20 Hzへ同期し、学習で反復読込できる形式へ整えた学習層である。
+rosbag2とLeRobotDatasetも役割が異なります。
+前者はtopicごとの時刻と原メッセージを保持する証拠層、後者は20 Hzへ同期し、学習で反復読込できる形式へ整えた学習層です。
 
 ## 4. 実行環境とデータschema
 
@@ -163,8 +165,8 @@ rosbag2とLeRobotDatasetも役割が異なる。
 | `observation.state` | `5` | controller定義順のjoint1、joint2、joint4、joint3、gripperの現在角度 |
 | `action` | `5` | 同じ順序のcontroller reference。絶対関節目標、単位はrad |
 
-変換器は、画像、joint state、arm controller reference、gripper controller referenceをbagのtimestampで並べ、直前値保持で20 Hzの共通gridへ載せる。
-画像、state、actionはLeRobotのpreprocessorでmean / standard deviation正規化し、推論後にpostprocessorで元の関節値へ戻す。
+変換器は、画像、joint state、arm controller reference、gripper controller referenceをbagのtimestampで並べ、直前値保持で20 Hzの共通gridへ載せます。
+画像、state、actionはLeRobotのpreprocessorでmean / standard deviation正規化し、推論後にpostprocessorで元の関節値へ戻します。
 
 ### ACT学習条件
 
@@ -185,30 +187,30 @@ rosbag2とLeRobotDatasetも役割が異なる。
 
 ## 5. 教師データをどう作ったか
 
-収集では、キューブのy座標を`-0.103〜-0.097 m`の狭い範囲で変え、`direct_clear`と`home_safe`を交互に割り当てた。
-乱数seedは`20261106`である。
-各episodeの開始前にキューブとroute cueを再配置し、Jevへ候補、推奨strategy、`direct_path_clear`、`optimization_goal`を渡した。
+収集では、キューブのy座標を`-0.103〜-0.097 m`の狭い範囲で変え、`direct_clear`と`home_safe`を交互に割り当てました。
+乱数seedは`20261106`です。
+各episodeの開始前にキューブとroute cueを再配置し、Jevへ候補、推奨strategy、`direct_path_clear`、`optimization_goal`を渡す構成です。
 
-Jevは`direct_transfer`または`home_transfer`を返す。
-confidenceが0.55未満、候補外の応答、API errorの場合は推奨strategyへfallbackする。
-採用した20 episodeではfallbackは発生しなかった。
+Jevは`direct_transfer`または`home_transfer`を返します。
+confidenceが0.55未満、候補外の応答、API errorの場合は推奨strategyへfallbackします。
+採用した20 episodeにfallbackはありません。
 
-MoveIt 2はapproach、grasp、lift、transfer、release、returnを順に計画する。
-動作中はカメラ画像、joint state、controller reference、task context、phase、Jev request / decisionをrosbag2へ保存した。
-収集後に必須topic、画像形式、timestamp逆行、周期、最終poseを監査し、成功したepisodeだけを学習datasetへ昇格した。
+MoveIt 2はapproach、grasp、lift、transfer、release、returnを順に計画します。
+動作中はカメラ画像、joint state、controller reference、task context、phase、Jev request / decisionをrosbag2へ保存します。
+収集後には必須topic、画像形式、timestamp逆行、周期、最終poseを監査し、成功したepisodeだけを学習datasetへ昇格させました。
 
-初回収集は19 / 20本が成功した。
-失敗した1本は、task開始前のMoveIt action goal responseでDDS timeoutになったため、同じ条件で取り直した。
-この20本を最初の全工程datasetとし、`direct_clear` 10本、`home_safe` 10本、合計15,016 frameへ変換した。
+初回収集の結果は19 / 20本の成功です。
+失敗した1本は、task開始前のMoveIt action goal responseでDDS timeoutになったため、同じ条件で取り直しました。
+取り直し後の20本を最初の全工程datasetとし、`direct_clear` 10本、`home_safe` 10本、合計15,016 frameへ変換しています。
 
 ### 20本から40本へ増やした経路
 
-全工程datasetの量と条件幅を分けて調べるため、最初の20本を固定し、同じ条件範囲から20本を加えた`narrow-40`と、キューブ位置・実行速度の範囲を広げた20本を加えた`diverse-40`を作った。
-追加収集はJevの`image_text`入力を使い、全episodeをbag監査へ通した。
-比較では学習に含めない6 episodeを共通holdoutとして固定した。
-内訳は、多様化motion pilotのepisode 700〜703と、Jev `image_text` pilotのepisode 710〜711である。
-キューブy座標は`-0.104209〜-0.096274 m`、速度scaleは`0.7340〜0.7963`で、広げた条件範囲内の別収集データである。
-したがって「未学習」は学習manifestへ含めていないことを意味し、未知分布への汎化を意味しない。
+全工程datasetの量と条件幅を分けて調べるため、最初の20本を固定し、同じ条件範囲から20本を加えた`narrow-40`と、キューブ位置・実行速度の範囲を広げた20本を加えた`diverse-40`を作りました。
+追加収集にはJevの`image_text`入力を使い、全episodeをbag監査へ通しています。
+比較用には、学習に含めない6 episodeを共通holdoutとして固定しました。
+内訳は、多様化motion pilotのepisode 700〜703と、Jev `image_text` pilotのepisode 710〜711です。
+キューブy座標は`-0.104209〜-0.096274 m`、速度scaleは`0.7340〜0.7963`で、広げた条件範囲内の別収集データです。
+ここでいう「未学習」は学習manifestへ含めていないことを意味し、未知分布への汎化を意味しません。
 
 | Dataset | 構成 | 主な用途 |
 | --- | --- | --- |
@@ -217,29 +219,29 @@ MoveIt 2はapproach、grasp、lift、transfer、release、returnを順に計画�
 | `diverse-40` | `baseline-20` + 位置・速度範囲を広げた20 episode | 条件幅を増やす比較、phase分割学習 |
 | `holdout-6` | いずれの学習にも含めない6 episode | Offline評価と単一chunk局所診断 |
 
-2,000 step時点の共通holdout first-frame MAEは、`baseline-20`が0.0775、`narrow-40`が0.0661、`diverse-40`が0.1030だった。
-この条件では量の追加による改善は観測したが、条件幅を広げた効果は確認できなかった。
-`diverse-40`を4,000 stepまで延長すると0.0838まで下がったが、全工程rolloutではキューブを動かせなかった。
+2,000 step時点の共通holdout first-frame MAEは、`baseline-20`が0.0775、`narrow-40`が0.0661、`diverse-40`が0.1030でした。
+この条件では量の追加による改善を観測しましたが、条件幅を広げた効果は確認できませんでした。
+`diverse-40`を4,000 stepまで延長すると0.0838まで下がりましたが、全工程rolloutではキューブを動かせませんでした。
 
 ## 6. 学習と評価の進め方
 
-最初の200 stepはAMPを有効にしたが、gradient normが`nan`になった。
-RTX 5070上で計算自体は継続したものの、更新の健全性を確認できないため、そのcheckpointを最終評価には使わなかった。
+最初の200 stepではAMPを有効にしましたが、gradient normは`nan`でした。
+RTX 5070上で計算自体は継続したものの、更新の健全性を確認できないため、そのcheckpointを最終評価には使いませんでした。
 
-次にAMPを無効化し、400 stepまでFP32で学習した。
-さらに400 step checkpointから再開し、合計2,000 stepまで延長した。
-各checkpointではlossだけを見ず、保存したmodelを新しいprocessで読み直し、offline actionとGazebo rolloutを順に確認した。
+次の試行ではAMPを無効化し、400 stepまでFP32で学習しました。
+そのcheckpointから学習を再開し、合計2,000 stepまで延長しています。
+各checkpointではlossだけを見ず、保存したmodelを新しいprocessで読み直し、offline actionとGazebo rolloutを順に確認する手順です。
 
-Closed-loopでは、ROS 2 HumbleのPython 3.10とLeRobotのPython 3.12をlocalhost HTTPで分離した。
-controllerは20 Hzで最新画像と5関節stateを送り、ACTが返したactionの先頭stepを絶対関節目標として使う。
-報告した全工程rolloutでは1 commandの変化量を最大0.08 radに制限した。
-READMEの再現例は初回試行をさらに保守的にするため0.05 radを指定している。
-phase分割の診断では100 actionを途中で切らず実行するため0.30 radとし、全工程との性能比較には使っていない。
-局所評価の開始前には、切り出したholdout episodeの先頭関節状態へアームを移動した。
-この準備動作でキューブを動かさないよう、一時的にキューブを作業領域外へ退避させ、関節移動後に元のキューブ位置とroute cueを復元した。
-ACTのtemporal ensemblingは使用していない。
-いずれも関節可動域へのclampを併用した。
-3回連続で推論に失敗した場合、または45秒に到達した場合は停止する。
+Closed-loopでは、ROS 2 HumbleのPython 3.10とLeRobotのPython 3.12をlocalhost HTTPで分離しています。
+controllerは20 Hzで最新画像と5関節stateを送り、ACTが返したactionの先頭stepを絶対関節目標として使います。
+報告した全工程rolloutにおける1 commandの最大変化量は0.08 radです。
+READMEの再現例は初回試行をさらに保守的にするため0.05 radを指定しています。
+phase分割の診断では100 actionを途中で切らず実行するため0.30 radとし、全工程との性能比較には使っていません。
+局所評価の開始前には、切り出したholdout episodeの先頭関節状態へアームを移動しています。
+この準備動作でキューブを動かさないよう、一時的にキューブを作業領域外へ退避させ、関節移動後に元のキューブ位置とroute cueを復元しました。
+ACTのtemporal ensemblingは使用していません。
+いずれの条件でも、関節可動域へのclampを併用しています。
+3回連続で推論に失敗した場合、または45秒に到達した場合は停止します。
 
 ## 7. 結果
 
@@ -256,9 +258,9 @@ ACTのtemporal ensemblingは使用していない。
 | 平均 / 最大配置誤差 | 5.65 / 15.47 mm |
 | LeRobotDataset | 15,016 frame、20 Hz |
 
-画像message数よりLeRobotDatasetのframe数が多いのは、20 Hzの共通時刻gridへ変換する際に、各時刻で直前の画像を保持してstateとactionへ対応付けたためである。
+画像message数よりLeRobotDatasetのframe数が多いのは、20 Hzの共通時刻gridへ変換する際に、各時刻で直前の画像を保持してstateとactionへ対応付けたためです。
 
-代表例では、`direct_transfer`が配置誤差5.93 mm、`home_transfer`が7.58 mmで完了した。
+代表例の配置誤差は、`direct_transfer`が5.93 mm、`home_transfer`が7.58 mmでした。
 
 ### ACT
 
@@ -268,19 +270,20 @@ ACTのtemporal ensemblingは使用していない。
 | 400 step / FP32 | 3.367 | 125.532 | 0.595 | 未達 |
 | 2,000 step / FP32 | 1.500 | 77.821 | 0.0461 | 未達 |
 
-2,000 step checkpointは、20 episodeの先頭frameすべてで有限なactionを返した。
-45秒のGazebo rolloutでは882 actionを出力した。
-20.03 Hzはaction timestamp間隔から求めた実行中rateで、壁時計45秒との単純除算ではない。
-推論レイテンシ中央値は3.30 msだった。
-最初の推論だけは857 msを要した。
+2,000 step checkpointは、20 episodeの先頭frameすべてで有限なactionを返しています。
+45秒のGazebo rolloutにおける出力は882 actionです。
+20.03 Hzはaction timestamp間隔から求めた実行中rateで、壁時計45秒との単純除算ではありません。
+推論レイテンシ中央値は3.30 msでした。
+最初の推論だけは857 msを要しています。
 
-アームは把持姿勢の方向へ動いたが、キューブのposeは開始前後で変化しなかった。
-rolloutはtime limitで終了し、task successはfalseだった。
+アームは把持姿勢の方向へ動きましたが、キューブのposeは開始前後で変化しませんでした。
+rolloutはtime limitで終了し、task successはfalseでした。
 
 ### 失敗地点を分離した再評価
 
-全工程の最初の失敗点を詳しく調べるため、教師episodeを`descend`開始から`transfer`直前まで切り出した。
-40 episode、4,467 frameでACTを2,000 step学習し、同じ変換規則で作った未学習6 episode、661 frameをholdoutにした。
+全工程の最初の失敗点を詳しく調べるため、教師episodeを`descend`開始から`transfer`直前まで切り出しています。
+学習条件は40 episode、4,467 frame、2,000 stepです。
+同じ変換規則で作った未学習6 episode、661 frameをholdoutにしました。
 
 | 指標 | 結果 |
 | --- | ---: |
@@ -290,55 +293,57 @@ rolloutはtime limitで終了し、task successはfalseだった。
 | Holdout 6 episodeのfirst-frame MAE | 0.0259 rad |
 | Holdout episode 0の100-action chunk MAE | 0.0148 rad |
 
-Holdout 6本のうち、両route labelを含み、キューブy位置が異なる3条件だけを事後的な診断subsetとして選び、各条件の開始姿勢とキューブ位置をGazeboへ再現した。
-残り3本はこの局所診断の評価対象ではない。
-この3条件は事後的な診断subsetであり、母集団の成功率推定には使わない。
-初期観測からACTが生成した100 actionを20 Hz、`max_delta=0.30`で一度だけ最後まで実行した。
-chunk中にpolicyの再推論は行わないが、低位の関節controllerはfeedback制御を続ける。
-全工程評価の`max_delta=0.08`とは条件が異なるため、同じ評価条件での改善比較ではない。
-学習対象外から選んだ3初期条件では、キューブZ座標が20.02、20.16、21.24 mm増加した。
-局所基準は終了時のZ増加15 mm以上とした。
-小さなpose変動と明確な鉛直変位を区別する診断閾値として実験後に導入したもので、接触、支持状態、厳密なgraspを判定する基準ではない。
-選んだ3条件では、いずれもこの局所基準を満たした。
-episode 710の再計測では100 actionをすべて保存し、2秒後も高さを維持した。
-この結果は、搬送、解放、復帰を含むpick-and-place全体の成功ではない。
+Holdout 6本のうち、両route labelを含み、キューブy位置が異なる3条件だけを事後的な診断subsetとして選びました。
+各条件の開始姿勢とキューブ位置はGazeboへ再現しています。
+残り3本はこの局所診断の評価対象ではありません。
+この3条件は事後的な診断subsetであり、母集団の成功率推定には使いません。
+初期観測からACTが生成した100 actionは、20 Hz、`max_delta=0.30`で一度だけ最後まで実行しています。
+chunk中にpolicyの再推論は行いませんが、低位の関節controllerはfeedback制御を続けます。
+全工程評価の`max_delta=0.08`とは条件が異なるため、同じ評価条件での改善比較ではありません。
+学習対象外から選んだ3初期条件におけるキューブZ座標の増加量は、20.02、20.16、21.24 mmです。
+局所基準は終了時のZ増加15 mm以上としました。
+小さなpose変動と明確な鉛直変位を区別する診断閾値として実験後に導入したもので、接触、支持状態、厳密なgraspを判定する基準ではありません。
+選んだ3条件は、いずれもこの局所基準を満たしています。
+episode 710の再計測では100 actionをすべて保存し、2秒後も高さが維持されました。
+この結果は、搬送、解放、復帰を含むpick-and-place全体の成功ではありません。
 
 ## 8. 結果から何が言えるか
 
-収集から推論までの経路は通った。
-具体的には、Jev判断の記録、MoveIt 2による教師軌道、rosbag2収録、20 Hz同期、LeRobotDataset読込、ACT学習、checkpoint再読込、画像前処理、action逆正規化、ROS 2 controllerへの接続を一続きで確認した。
+収集から推論までの経路は一通り接続できています。
+具体的には、Jev判断の記録、MoveIt 2による教師軌道、rosbag2収録、20 Hz同期、LeRobotDataset読込、ACT学習、checkpoint再読込、画像前処理、action逆正規化、ROS 2 controllerへの接続を一続きで確認しました。
 
-一方、ACTがpick-and-place全体を学習したとは言えない。
-Offline MAEは学習datasetの先頭frameだけを測った値で、先頭frameの教師actionはほぼhome姿勢だった。
-0.0461への低下はcheckpointが有限なactionを返すsanity checkにはなるが、episode全体の追従や汎化を示さない。
+ACTがpick-and-place全体を学習したとは言えません。
+Offline MAEは学習datasetの先頭frameだけを測った値であり、その教師actionはほぼhome姿勢です。
+0.0461への低下はcheckpointが有限なactionを返すsanity checkにはなりますが、episode全体の追従や汎化を示すものではありません。
 
-全工程のrolloutだけを見た時点では、未達原因をcovariate shiftだけに決める証拠もなかった。
-datasetが20 episodeと狭いこと、初期frameへ偏ったoffline評価、action chunk 100に対して先頭actionだけを逐次実行したこと、画像augmentationを使っていないこと、action clampが軌道を変えた可能性が残る。
-最初に教師軌道から外れた時刻、phase別誤差、clamp回数は今回のlogでは測れていない。
+全工程のrolloutだけでは、未達原因をcovariate shiftだけに絞る証拠は得られていません。
+datasetが20 episodeと狭いこと、初期frameへ偏ったoffline評価、action chunk 100に対して先頭actionだけを逐次実行したこと、画像augmentationを使っていないこと、action clampが軌道を変えた可能性が残ります。
+最初に教師軌道から外れた時刻、phase別誤差、clamp回数は今回のlogでは測れていません。
 
-その後のphase分割実験では、学習対象外から事後選択した3条件で局所的なキューブZ増加動作を確認した。
-ただし、学習区間、初期状態、データ構成、実行条件を同時に変えているため、どの変更が寄与したかは分離できていない。
-全工程を一つの成否だけで評価するより、phase単位で成立可能性を確かめる方が、次に追加すべきデータと評価を判断しやすい。
-次は`transfer`、`release`、`return`を順に追加し、成立範囲がどこで崩れるかを測る。
+その後のphase分割実験で確認できたのは、学習対象外から事後選択した3条件における局所的なキューブZ増加動作です。
+学習区間、初期状態、データ構成、実行条件を同時に変えているため、どの変更が寄与したかは分離できていません。
+全工程を一つの成否だけで評価するより、phase単位で成立可能性を確かめる方が、次に追加すべきデータと評価を判断しやすくなります。
+次は`transfer`、`release`、`return`を順に追加し、成立範囲がどこで崩れるかを測ります。
 
-次の実験では、episode単位でtrain / validation / testを分け、全frameとphase別の誤差を測る。
-Closed-loopは複数の初期配置と両route条件で少なくとも5回ずつ実行し、success rateとTask Completionを記録する。
-同時にraw action、clamp後action、joint errorを保存し、最初の破綻点を特定する。
+次の実験では、episode単位でtrain / validation / testを分け、全frameとphase別の誤差を測ります。
+Closed-loopは複数の初期配置と両route条件で少なくとも5回ずつ実行し、success rateとTask Completionを記録します。
+同時にraw action、clamp後action、joint errorを保存し、最初の破綻点を特定します。
 
 ## 9. 再現性と提出物
 
-公開用sourceには、ROS 2 package、収集、bag監査、LeRobot変換、ACT学習、offline評価、推論server、rollout controller、提出動画生成を含めている。
-credential、bag、dataset、checkpoint、生成動画はrepositoryへ含めない。
-AI-Robot-Book-Humble由来codeは、revision `19c1d6069126cd27488bf1bbefd410704bfc515d`のApache-2.0 sourceとして出典と変更箇所を明記した。
-上流READMEはAX-12AのCADモデルについてROBOTISから使用許諾を得ていることと、関連する知的財産権がROBOTISに帰属することを明記している。
-本公開repositoryはCRANE+のCADやmesh、Docker image自体を再配布せず、実行時に外部環境から参照する。
+公開用sourceの範囲は、ROS 2 package、収集、bag監査、LeRobot変換、ACT学習、offline評価、推論server、rollout controller、提出動画生成です。
+credential、bag、dataset、checkpoint、生成動画はrepositoryへ含めていません。
+AI-Robot-Book-Humble由来codeについては、revision `19c1d6069126cd27488bf1bbefd410704bfc515d`のApache-2.0 sourceとして出典と変更箇所を明記しています。
+上流READMEには、AX-12AのCADモデルについてROBOTISから使用許諾を得ていることと、関連する知的財産権がROBOTISに帰属することが明記されています。
+本公開repositoryはCRANE+のCADやmesh、Docker image自体を再配布せず、実行時に外部環境から参照します。
 
-公開repositoryは[uhiron55/physical-ai-2026-advanced-1-final-assignment](https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment)である。
-提出対象の固定commitは`SUBMISSION.md`と`submission-source-v3` tagで示す。
-提出動画は[YouTubeの限定公開URL](https://youtu.be/HnCxy8pZ3nA)で確認できる。
-固定digestの新規containerでは、2 packageのbuild、camera / controller readiness、決定論的fallbackによる教師episodeを再実行し、配置誤差2.81 mmで完了した。
-大容量dataset、checkpoint、評価bagはGitへ含めず、`results/artifact_manifest.json`に論理path、size、SHA-256を記録した。
-公開repository、固定source commit、動画URLは`SUBMISSION.md`に集約し、`python3 scripts/validate_repository.py --release`で提出状態を検査する。
+公開repositoryは[uhiron55/physical-ai-2026-advanced-1-final-assignment](https://github.com/uhiron55/physical-ai-2026-advanced-1-final-assignment)です。
+提出対象の固定commitは`SUBMISSION.md`と`submission-source-v3` tagに示しています。
+提出動画は[YouTubeの限定公開URL](https://youtu.be/HnCxy8pZ3nA)で確認できます。
+固定digestの新規containerでは、2 packageのbuild、camera / controller readiness、決定論的fallbackによる教師episodeを再実行しています。
+配置誤差は2.81 mmでした。
+大容量dataset、checkpoint、評価bagはGitへ含めず、`results/artifact_manifest.json`に論理path、size、SHA-256を記録しました。
+公開repository、固定source commit、動画URLは`SUBMISSION.md`に集約し、`python3 scripts/validate_repository.py --release`で提出状態を検査します。
 
 ## 出典
 
