@@ -144,6 +144,46 @@ ACTが覚えるのは、「いまは把持段階である」という分類で�
 | LeRobotDataset | 監査済みbag | 20 Hzでそろった画像、state、action | ACTが読めるepisode形式と正規化統計を作るため |
 | ACT | RGB画像と現在の関節状態 | 100 stepの絶対関節目標chunk | 画像条件付きの連続actionをまとめて生成するため |
 
+### 実装時のノード構成
+
+ROS 2のノードは、センサや関節と一対一に置くものではなく、処理上の責務ごとに分けています。
+今回の実装では、教師デモを収集するときと、学習済みACTを実行するときで、動くノード構成も分けました。
+
+教師デモ収集時の主な流れは次のとおりです。
+
+1. Gazeboの固定カメラと関節状態を、`ros_gz_bridge`と`joint_state_broadcaster`がROS 2 topicへ出す。
+2. `parameterized_pick_place` executable内の`parameterized_pick_place_arm`と`parameterized_pick_place_gripper`が、phase進行とMoveIt 2への目標指定を担当する。
+3. `parameterized_pick_place_arm`が`/jev_crane/phase_request`を発行し、`jev_phase_selector`がJev APIへ問い合わせる。
+4. `jev_phase_selector`が`/jev_crane/selected_phase`を返し、選ばれたstrategyに応じてMoveIt 2の`move_group`が関節軌道を計画する。
+5. `controller_manager`配下のarm / gripper controllerが軌道を実行し、rosbag2 recorderが画像、関節状態、controller reference、phase、Jev判断を記録する。
+
+一方、学習済みACTのclosed-loop実行では、JevとMoveIt 2を推論経路から外しています。
+`act_rollout_controller`が`/camera/image_raw`と`/joint_states`を受け取り、localhost HTTPでPython 3.12側のACT inference serverへ渡します。
+返された5関節の目標値を安全範囲と1 stepあたりの変化量で制限し、arm / gripper controllerへ送ります。
+
+```text
+教師デモ収集
+Gazebo sensor -> ros_gz_bridge / joint_state_broadcaster -> ROS 2 topics
+                                      |                         |
+parameterized_pick_place <-> jev_phase_selector <-> Jev API    |
+          |                                                     |
+          +-> MoveIt 2 move_group -> controller_manager -> Gazebo
+                                                                |
+                                      rosbag2 recorder <---------+
+
+学習済みACTの実行
+/camera/image_raw + /joint_states
+          -> act_rollout_controller <-> ACT inference server
+          -> arm / gripper controller -> Gazebo
+
+オフライン処理
+rosbag2 -> audit / 20 Hz同期 -> LeRobotDataset -> ACT学習 -> checkpoint
+```
+
+したがって、関節ごとに独立したROS 2ノードを作ったわけではありません。
+複数関節の実行はcontroller群が担い、上位のノードは判断、phase進行、観測と推論の接続といった責務を持ちます。
+また、Jev API、ACT inference server、bag変換、ACT学習は、ROS 2 topic graphの外にある外部処理です。
+
 ### Jevが必要だったか
 
 出発点にあった課題は、条件ごとに異なる成功デモを増やすと、**なぜその経路を選んだか**が軌道だけからは分からなくなることでした。

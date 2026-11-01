@@ -46,14 +46,30 @@ The repository intentionally excludes credentials, rosbag2 recordings, datasets,
 ## Architecture
 
 ```text
+Teacher collection runtime
 Gazebo camera / joint state
-  -> Jev phase selection
-  -> MoveIt 2 trajectory planning
-  -> ROS 2 controller execution
-  -> rosbag2 synchronized recording
-  -> LeRobotDataset conversion
-  -> ACT training and Gazebo rollout
+  -> ROS-Gazebo bridge / joint-state broadcaster
+  -> parameterized pick-and-place coordinator
+  <-> Jev phase-selector ROS node <-> Jev API
+  -> MoveIt 2 move_group
+  -> arm / gripper controllers
+  -> rosbag2 recording
+
+Offline data and learning
+rosbag2 -> audit and 20 Hz synchronization -> LeRobotDataset -> ACT checkpoint
+
+Learned-policy runtime
+camera + joint state -> ACT rollout ROS node <-> HTTP inference server
+                     -> arm / gripper controllers -> Gazebo
 ```
+
+The architecture is responsibility-based rather than one-node-per-joint. The
+`parameterized_pick_place` executable creates separate arm and gripper ROS 2
+nodes, while `controller_manager` manages the individual joints. Jev and the
+Python 3.12 ACT inference server are external processes reached through narrow
+interfaces; dataset conversion and ACT training are offline processes, not ROS
+2 nodes. The teacher-collection runtime and learned-policy runtime are separate
+execution modes.
 
 The repository contains the validated scripted baseline, a fixed-camera Gazebo world, the Jev phase selector, the MoveIt 2 phase executor, rosbag2 auditing, LeRobot conversion, and an ACT training command.
 
