@@ -152,11 +152,19 @@ rosbag2とLeRobotDatasetも役割が異なります。
 | --- | --- |
 | Host | Windows 11 Pro 64-bit、AMD Ryzen 9 7900X |
 | GPU | NVIDIA GeForce RTX 5070、VRAM 12,227 MiB、driver 610.88 |
-| Container | Docker Desktop 4.97.0、Docker Engine 29.9.2、digest固定Ubuntu 22.04 / ROS 2 Humble image |
+| Container host | Docker Desktop 4.97.0、Docker Engine 29.9.2 |
+| Runtime image | `airobotbook/ros2-desktop-ai-robot-book-humble@sha256:b58ec74c019aacd9ce4818fa25fc5a9e0a1f22f8c9cd1f5260994bf15cd9eb63`、Ubuntu 22.04 |
 | 環境固定 | multi-stage Dockerfile、Python 3.12.16、uv 0.13.6、101 package lock |
-| Robot stack | ROS 2 Humble、Gazebo / Ignition、MoveIt 2、CRANE+ V2 |
-| Learning stack | Python 3.12.16、LeRobot 0.6.1、PyTorch 2.11.0+cu128 |
-| Source base | `AI-Robot-Book-Humble/crane_plus` revision `19c1d6069126cd27488bf1bbefd410704bfc515d` |
+| ROS / motion planning | ROS 2 Humble base package `0.10.0-1jammy.20250114.175320`、MoveIt 2 package `2.5.7-1jammy.20250114.205048` |
+| Simulation bridge | `ros_gz_sim 0.244.16-2jammy.20241205.203411`。Gazebo / Ignitionを含むruntime全体は上記image digestで固定 |
+| Robot model / source | CRANE+ V2、`AI-Robot-Book-Humble/crane_plus` revision `19c1d6069126cd27488bf1bbefd410704bfc515d` |
+| Jev service / model | TypeSafe AI Jev API、model identifier `jev-latest`、利用日2026-10-31。immutable model revisionは取得していない |
+| Quest input pilot | Meta Quest 2、Quest2ROS ROS 2 branch commit `6e9e8afec0e00da4da9e6650cfe69e21bb500aad`。接続検証のみで最終構成には不使用 |
+| Learning stack | LeRobot 0.6.1、PyTorch 2.11.0+cu128、torchvision 0.26.0+cu128、NumPy 2.2.6 |
+| ACT model | LeRobot 0.6.1のACT実装、ImageNet事前学習済みResNet18、checkpoint `model.safetensors` SHA-256 `5875097687d4e008e161f994762ce342e99b6f0920cbe5d10d623edf502c58dc` |
+
+固定versionを取得できたものはversion、commit、digest、artifact hashで示しました。
+`jev-latest`はmutableなmodel identifierであり、2026-10-31に利用したモデルを同一revisionとして再取得できることまでは保証できません。
 
 ### 観測と行動
 
